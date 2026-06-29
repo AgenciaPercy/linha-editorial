@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentStatus {
+  pendente
+  aprovado
+  ajustar
+  nao_usar
+}
+
+enum DecisionStatus {
+  pendente
+  manter
+  alterar
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  token     String   @unique
+  title     String
+  period    String
+  status    String   @default("em_andamento")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contentItems ContentItem[]
+  activityLogs ActivityLog[]
+}
+
+model ContentItem {
+  id        String @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  week                   String
+  month                  String
+  format                 String
+  title                  String
+  pillar                 String
+  objective              String
+  mainIdea               String  @db.Text
+  artText                String  @db.Text
+  caption                String  @db.Text
+  visualSuggestion       String  @db.Text
+  clientValidationPoint  String  @db.Text
+  cta                    String
+  hashtags               String[] @default([])
+
+  status ContentStatus @default(pendente)
+
+  legendDecision DecisionStatus @default(pendente)
+  legendRequest  String         @default("") @db.Text
+
+  designDecision DecisionStatus @default(pendente)
+  designRequest  String         @default("") @db.Text
+
+  generalNotes String @default("") @db.Text
+
+  agencyImageUrl String?
+  clientImageUrl String?
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activityLogs ActivityLog[]
+
+  @@index([projectId])
+}
+
+model ActivityLog {
+  id            String       @id @default(cuid())
+  projectId     String
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contentItemId String?
+  contentItem   ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  action   String
+  oldValue String? @db.Text
+  newValue String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([contentItemId])
+}
