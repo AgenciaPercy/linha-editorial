@@ -8,11 +8,13 @@ export default async function AprovacaoPage({
   params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams: { token?: string };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const token = searchParams.token || null;
-  const project = await prisma.project.findUnique({ where: { slug: params.slug } });
+  const { slug } = await params;
+  const { token: tokenParam } = await searchParams;
+  const token = tokenParam || null;
+  const project = await prisma.project.findUnique({ where: { slug } });
 
   if (!project || !token || project.token !== token) {
     return <AccessDenied />;

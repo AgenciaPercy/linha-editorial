@@ -3,13 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { generateSlug, generateToken } from "@/lib/token";
 import { isAdminAuthorized } from "@/lib/auth";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminAuthorized(req.headers.get("x-admin-password"))) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const { id } = await params;
   const original = await prisma.project.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { contentItems: true },
   });
 

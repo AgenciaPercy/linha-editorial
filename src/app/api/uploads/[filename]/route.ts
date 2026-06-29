@@ -11,8 +11,9 @@ const MIME_BY_EXT: Record<string, string> = {
   gif: "image/gif",
 };
 
-export async function GET(_req: NextRequest, { params }: { params: { filename: string } }) {
-  const fileName = path.basename(params.filename);
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ filename: string }> }) {
+  const { filename } = await params;
+  const fileName = path.basename(filename);
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
   const mime = MIME_BY_EXT[ext];
   if (!mime) {

@@ -15,13 +15,14 @@ const ALLOWED_FIELDS = [
 const VALID_STATUS = ["pendente", "aprovado", "ajustar", "nao_usar"];
 const VALID_DECISION = ["pendente", "manter", "alterar"];
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const token = req.nextUrl.searchParams.get("token");
   if (!token) {
     return NextResponse.json({ error: "Token ausente" }, { status: 401 });
   }
 
-  const item = await prisma.contentItem.findUnique({ where: { id: params.id } });
+  const item = await prisma.contentItem.findUnique({ where: { id } });
   if (!item) {
     return NextResponse.json({ error: "Conteúdo não encontrado" }, { status: 404 });
   }
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const updated = await prisma.contentItem.update({
-    where: { id: params.id },
+    where: { id },
     data,
   });
 

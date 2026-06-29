@@ -26,11 +26,12 @@ const EDITABLE_FIELDS = [
   "generalNotes",
 ] as const;
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminAuthorized(req.headers.get("x-admin-password"))) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const { id } = await params;
   const body = await req.json();
 
   if (body.hashtags && (!Array.isArray(body.hashtags) || body.hashtags.length !== 5)) {
@@ -42,17 +43,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (field in body) data[field] = body[field];
   }
 
-  const contentItem = await prisma.contentItem.update({ where: { id: params.id }, data });
+  const contentItem = await prisma.contentItem.update({ where: { id }, data });
   return NextResponse.json({ contentItem });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminAuthorized(req.headers.get("x-admin-password"))) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const item = await prisma.contentItem.findUnique({ where: { id: params.id } });
-  await prisma.contentItem.delete({ where: { id: params.id } });
+  const { id } = await params;
+  const item = await prisma.contentItem.findUnique({ where: { id } });
+  await prisma.contentItem.delete({ where: { id } });
 
   if (item) {
     await deleteUploadedImage(item.agencyImageUrl);

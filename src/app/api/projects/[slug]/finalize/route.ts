@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeSummary } from "@/types";
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const { token } = await req.json();
 
-  const project = await prisma.project.findUnique({ where: { slug: params.slug } });
+  const project = await prisma.project.findUnique({ where: { slug } });
   if (!project || project.token !== token) {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }
